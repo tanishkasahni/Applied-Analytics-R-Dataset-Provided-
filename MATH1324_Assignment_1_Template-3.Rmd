@@ -1,0 +1,135 @@
+---
+title: "MATH1324 Assignment 1"
+subtitle: Applied Analytics
+---
+
+Tanishka Sahni (s4175835)
+
+# Loading Packages
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+```
+
+# Implementing Data
+
+```{r}
+sp500 <- read.csv("~/Downloads/S&P 500 Historical Data1825.csv", stringsAsFactors = FALSE)
+bitcoin <- read.csv("~/Downloads/Bitcoin Historical Data1825.csv", stringsAsFactors = FALSE)
+
+sp500$Price <- as.numeric(gsub(",","",sp500[[2]]))
+sp500$Date <- as.Date(sp500[[1]], format = "%m/%d/%Y")
+
+bitcoin$Price <- as.numeric(gsub(",","",bitcoin[[2]]))
+bitcoin$Date <- as.Date(bitcoin[[1]], format = "%m/%d/%Y")
+
+
+sp500 <- sp500 %>% arrange(Date)
+bitcoin <- bitcoin %>% arrange(Date)
+
+```
+
+
+
+#Performing Task-1
+
+```{r}
+#Mean of both the things
+mean(sp500$Price, na.rm = TRUE)
+mean(bitcoin$Price, na.rm = TRUE)
+
+#Median of both
+median(sp500$Price, na.rm = TRUE)
+median(bitcoin$Price, na.rm = TRUE)
+
+#Mode
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+getmode(sp500$Price)
+getmode(bitcoin$Price)
+
+#Range of both
+range(sp500$Price, na.rm = TRUE)
+range(bitcoin$Price , na.rm = TRUE)
+
+#standard deviation
+sd(sp500$Price, na.rm = TRUE)
+sd(bitcoin$Price, na.rm = TRUE)
+
+#variance
+var(sp500$Price , na.rm = TRUE)
+var(bitcoin$Price, na.rm = TRUE)
+
+#summary of both
+summary(sp500$Price)
+summary(bitcoin$Price)
+
+```
+
+
+
+
+#Performing Task-2
+
+```{r}
+ggplot(sp500 , aes(x=Date, y=Price))+
+  geom_line(color="blue")+
+  labs(title = "S&P 500 Price Trend (7 years", x="Date", y="Price")
+
+ggplot(bitcoin, aes(x=Date, y=Price))+
+  geom_line(color="orange")+
+  labs(title = "Bitcoin Price Trend(7 years)", x="Date", y="Price")
+
+merged <- merge(sp500, bitcoin, by="Date", suffixes = c("_sp500","_btc"))
+
+merged$halfyear <- format(merged$Date, "%Y/-%m")
+cor_halfyear <- merged %>%
+  group_by(halfyear) %>%
+  summarise(corr = cor(Price_sp500, Price_btc, use = "complete.obs"))
+
+ggplot(cor_halfyear, aes(x=halfyear, y=corr, group = 1))+
+  geom_line(color="darkgreen")+
+  theme(axis.text.x = element_text(angle=45, hjust = 1))+
+  labs(title = "6-Month Rolling Correlation: S&P 500 vs Bitcoin",
+       x="Half-Year", y="Correlation")
+
+
+```
+
+#Performing Task-3
+
+```{r}
+cor(merged$Price_sp500, merged$Price_btc, use = "complete.obs")
+
+ggplot(merged, aes(x=Price_sp500, y=Price_btc))+
+  geom_point(alpha=0.5, color="purple")+
+  labs(title = "Scatter Plot: S&P 500 vs Bitcoin Prices",
+       x="S&P 500 Price", y="Bitcoin Price")
+```
+
+#Performing Task-4
+
+```{r}
+#histogram for both
+hist(sp500$Price, main = "Histogram of S&P 500 Price", xlab = "Price", col = "lightblue")
+hist(bitcoin$Price, main= "Histogram for Bitcoin Prices", xlab = "Price", col = "lightgreen")
+
+#boxplot for both
+boxplot(sp500$Price, main="Boxplot of S&P 500 Prices", col = "lightblue")
+boxplot(bitcoin$Price, main="Boxplot of Bitcoin Prices", col = "lightgreen")
+
+#Shapiro-Wilk test 
+shapiro.test(sample(sp500$Price, 500))
+shapiro.test(sample(bitcoin$Price, 500))
+
+
+
+```
+
+#References:
+
+Baglin, J. (2016) Statistics course materials: Modules 1–5. RMIT University.
